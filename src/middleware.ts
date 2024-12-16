@@ -1,17 +1,11 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
+import { SessionClaims } from './types/general';
 
 // Define public routes and matchers for protected/admin routes
 const publicRoutes = ["/", "/api/webhook/register", "/sign-in", "/sign-up"];
 const isAdminRoute = createRouteMatcher(['/admin(.*)']);  // Admin routes matcher
 const isProtectedRoute = createRouteMatcher(['/dashboard(.*)', '/forum(.*)']);  // Protected routes matcher
-
-// Define type for sessionClaims
-interface SessionClaims {
-  metadata?: {
-    role?: string;
-  };
-}
 
 export default clerkMiddleware(async (auth, req) => {
   const { userId, redirectToSignIn, sessionClaims } = await auth();  // Get userId and session claims
