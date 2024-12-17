@@ -1,16 +1,27 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+import { auth, clerkClient } from "@clerk/nextjs/server";
 import prisma from "@/lib/prisma";
-import { SessionClaims } from "@/types/general";
 
 const ITEMS_PER_PAGE = 10;
 
 async function isAdmin(userId: string) {
+  try {
 
-  const { sessionClaims } = await auth()
+    if(!userId){
+      return false
+    }
 
-  const role = (sessionClaims as SessionClaims)?.metadata?.role;
-  return role === "admin";
+    const client = await clerkClient();
+    const user = (await client.users.getUser(userId)) || null;
+    if (!user) {
+      return false;
+    }
+    return user.publicMetadata?.role === "admin";
+  } catch (error) {
+    console.error("Error fetching user role:", error);
+    return false;
+  }
 }
 
 export async function GET(req: NextRequest) {
@@ -45,7 +56,8 @@ export async function GET(req: NextRequest) {
     const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
 
     return NextResponse.json({ user, totalPages, currentPage: page });
-  } catch (error) {
+  } catch (error: any) {
+    console.log(error)
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 }
@@ -54,7 +66,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
-  const { userId } = auth();
+  const { userId } = await auth();
 
   if (!userId || !(await isAdmin(userId))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -87,7 +99,8 @@ export async function PUT(req: NextRequest) {
     }
 
     return NextResponse.json({ message: "Update successful" });
-  } catch (error) {
+  } catch (error: any) {
+    console.log(error)
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 }
@@ -96,7 +109,7 @@ export async function PUT(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const { userId } = auth();
+  const { userId } = await auth();
 
   if (!userId || !(await isAdmin(userId))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -117,7 +130,8 @@ export async function DELETE(req: NextRequest) {
     });
 
     return NextResponse.json({ message: "Todo deleted successfully" });
-  } catch (error) {
+  } catch (error: any) {
+    console.log(error)
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 }
