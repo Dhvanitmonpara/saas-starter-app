@@ -12,7 +12,7 @@ import {
   CardHeader,
   CardTitle,
   CardContent,
-  CardFooter,
+  CardFooter
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
